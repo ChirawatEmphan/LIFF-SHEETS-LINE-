@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>บันทึกการลงพื้นที่</title>
+  <style>
+    /* ---------- CSS พื้นฐานให้ดูสวยงาม ---------- */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Kanit", sans-serif;
+      background: linear-gradient(to right, #edf2f4, #d9e9f5);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 400px;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #03a9f4;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+    input[type="date"],
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-family: "Kanit", sans-serif;
+    }
+    textarea {
+      resize: none; /* ไม่ให้ยืด-หด textarea ด้วยเมาส์ */
+      min-height: 80px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #03a9f4;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #0288d1;
+    }
+    #status {
+      margin-top: 15px;
+      font-weight: 500;
+      color: #f44336;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>บันทึกการลงพื้นที่</h1>
+    <form id="field-form">
+      <label for="date">วันที่:</label>
+      <input type="date" id="date" required />
+
+      <label for="location">สถานที่:</label>
+      <input type="text" id="location" required />
+
+      <label for="details">รายละเอียด:</label>
+      <textarea id="details" rows="4" required></textarea>
+
+      <button type="button" onclick="submitData()">บันทึกข้อมูล</button>
+    </form>
+
+    <div id="status"></div>
+  </div>
+
+  <script>
+    // ฟังก์ชัน Submit ข้อมูลด้วย google.script.run
+    function submitData() {
+      const date = document.getElementById('date').value;
+      const location = document.getElementById('location').value;
+      const details = document.getElementById('details').value;
+      const statusEl = document.getElementById('status');
+
+      // เช็กข้อมูลเบื้องต้น
+      if (!date || !location || !details) {
+        statusEl.style.color = 'red';
+        statusEl.textContent = 'กรุณากรอกข้อมูลให้ครบถ้วน';
+        return;
+      }
+
+      // เรียกฟังก์ชัน submitFormData() ที่อยู่ใน Code.gs
+      // แล้วส่งข้อมูล (Object) ไปด้วย
+      google.script.run
+        .withSuccessHandler(function (result) {
+          // result คือ Object ที่ฝั่ง Code.gs return กลับ
+          if (result.status === 'success') {
+            // หากบันทึกสำเร็จ
+            statusEl.style.color = 'green';
+            statusEl.textContent = result.message || 'บันทึกสำเร็จ';
+            // เคลียร์ฟอร์ม
+            document.getElementById('field-form').reset();
+          } else {
+            // หาก status เป็น error
+            statusEl.style.color = 'red';
+            statusEl.textContent = result.message || 'บันทึกไม่สำเร็จ';
+          }
+        })
+        .withFailureHandler(function (err) {
+          // กรณีสคริปต์เรียกไม่สำเร็จ เช่น ปัญหาเน็ต หรืออื่น ๆ
+          statusEl.style.color = 'red';
+          statusEl.textContent = 'เกิดข้อผิดพลาด: ' + err.message;
+        })
+        .submitFormData({
+          date: date,
+          location: location,
+          details: details
+        });
+    }
+  </script>
+</body>
+</html>
+
